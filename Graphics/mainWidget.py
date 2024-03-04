@@ -1,13 +1,13 @@
 import cv2
-
-import convertui
-import ui_pyqt
+from Graphics import ui_pyqt
 import numpy as np
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, Qt, QTimer
 from PyQt5.QtGui import QPixmap, QCursor
 
-# convertui.convertui(__file__, 'ui_pyqt')
+from Service import convertui
+
+convertui.convertui(__file__, 'ui_pyqt')
 
 
 class VideoThread(QThread):

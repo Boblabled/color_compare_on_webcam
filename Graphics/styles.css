@@ -1,0 +1,41 @@
+/*root{*/
+/*    --main-color: #4ecca3;*/
+/*    --color-for-gradient: #34b38a;*/
+/*    --first-extra-color: #FFFFFF;*/
+/*    --second-extra-color: #FF4783;*/
+/*    --third-extra-color: #FFF261;*/
+/*    --first-background-color: #2B333D;*/
+/*    --second-background-color: #232931;*/
+/*}*/
+QWidget {
+    background: #2B333D;
+    }
+
+QPushButton {
+    background: #232931;
+    border-radius: 10px;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    }
+
+QPushButton:hover {
+    background-color:#34b38a;
+    color: #232931;
+    border: 1px solid #232931;
+    }
+
+QPushButton:pressed {
+    background-color:#4ecca3;
+    }
+
+QLCDNumber {
+    background: #232931;
+    border-radius: 10px;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    }
+
+QLabel {
+    color: #FFFFFF;
+    }
+
