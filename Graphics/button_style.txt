@@ -1,6 +1,0 @@
-background: #232931;
-border-radius: 10px;
-color: #FFFFFF;
-border-width: 2px;
-border-color: #FFFFFF;
-border: 2px solid #FFFFFF;
