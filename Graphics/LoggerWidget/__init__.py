@@ -51,6 +51,9 @@ class Widget(QtWidgets.QWidget, ui_logger.Ui_Form):
         self.gridLayout.addWidget(logTextBox.widget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
 
+        # временный костыль
+        logging.getLogger().removeHandler(logging.getLogger().handlers[0])
+
         formatter = "%(asctime)s - %(levelname)s - %(message)s"
         formatter_for_console = colorlog.ColoredFormatter(
             '%(log_color)s' + formatter,
@@ -69,12 +72,12 @@ class Widget(QtWidgets.QWidget, ui_logger.Ui_Form):
         logTextBox.setFormatter(logging.Formatter(formatter))
         logging.getLogger().addHandler(logTextBox)
 
-        logging.getLogger().setLevel(logging.DEBUG)
-
         # тест
-        for i in range(5):
+
+        for i in range(1):
             logging.debug("Debug message")
             logging.info("Info message")
             logging.warning("Warning message")
             logging.error("Error message")
             logging.critical("Critical message")
+

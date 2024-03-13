@@ -7,8 +7,11 @@ from Workers.worker import WorkerPattern
 import cv2
 
 
+# TODO может вылететь ошибка при закрытии приложения
+# TODO сделать проверку на наличие камеры
 class Worker(WorkerPattern):
     change_pixmap_signal = pyqtSignal(np.ndarray)
+
     def __init__(self, my_thread: QThread | None, memory, parent=None):
         super().__init__(my_thread, parent)
         self.__cap = cv2.VideoCapture(0)

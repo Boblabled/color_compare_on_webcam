@@ -1,0 +1,141 @@
+/*root{*/
+/*    --main-color: #4ecca3;*/
+/*    --color-for-gradient: #34b38a;*/
+/*    --first-extra-color: #FFFFFF;*/
+/*    --second-extra-color: #FF4783;*/
+/*    --third-extra-color: #FFF261;*/
+/*    --first-background-color: #2B333D;*/
+/*    --second-background-color: #232931;*/
+/*}
+QCheckBox#MyCheckbox::indicator
+*/
+QMainWindow {
+    background: #2B333D;
+}
+
+
+QWidget {
+    background: #2B333D;
+    }
+
+QPushButton {
+    background: #232931;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    border-radius: 10px;
+    }
+
+QPushButton:hover {
+    background-color:#34b38a;
+    color: #232931;
+    border: 1px solid #232931;
+    }
+
+QPushButton:pressed {
+    background-color:#4ecca3;
+    }
+
+QLCDNumber {
+    background: #232931;
+    border-radius: 2px;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    }
+
+QLabel {
+    color: #FFFFFF;
+    }
+
+QScrollBar:vertical {
+    background: #2B333D;
+    margin: 0 0 0 0;
+    width: 10px;
+    }
+
+QScrollBar::handle:vertical {
+    background: #34b38a;
+    border: 1px solid transparent;
+    }
+
+QScrollBar::handle:vertical:hover {
+    background: #4ecca3;
+    }
+
+QScrollBar::add-line:vertical {
+    background: none;
+    }
+
+QScrollBar::sub-line:vertical {
+    background: none;
+    }
+
+QTextEdit {
+    border: 1px solid #FFFFFF;
+    border-radius: 2px;
+    background: #232931;
+    font-family: "Andale Mono", serif;
+}
+
+QSlider::groove:horizontal {
+    background-color: #232931;
+    border-radius: 5px;
+    border: 1px solid #FFFFFF;
+    height: 8px;
+    margin: 0;
+    }
+
+QSlider::handle:horizontal {
+    background-color: #34b38a;
+    border: 1px solid #FFFFFF;
+
+    width: 15px; /* ширина "ручки" */
+    margin: -4px 0; /* отступы от краев слайдера */
+    border-radius: 8px; /* радиус закругления углов */
+    }
+
+QSpinBox {
+    background: #232931;
+    color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    border-radius: 2px;
+}
+
+QSpinBox::up-button, QSpinBox::down-button {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 0px;
+}
+
+QCheckBox::indicator {
+    width: 12px;
+    height: 12px;
+    background: #232931;
+    border: 1px solid #FFFFFF;
+    border-radius: 2px;
+}
+
+QCheckBox::indicator:checked {
+    background: #34b38a;
+    border: 1px solid #FFFFFF;
+    border-radius: 2px;
+    image: url(Graphics/Styles/check.svg);
+}
+
+QComboBox {
+    background: #232931;
+    border: 1px solid #FFFFFF;
+    border-radius: 2px;
+}
+QComboBox::drop-down {
+    background: #232931;
+    border: 1px solid #FFFFFF;
+    border-radius: 2px;
+}
+
+QComboBox::drop-down {
+    border: 0;
+    width: 0; /* Ширина кнопки выпадающего списка */
+}
+
+
+

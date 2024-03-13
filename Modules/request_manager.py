@@ -21,9 +21,7 @@ class Command(Enum):
 
 
 class RequestManager:
-    slave = 1
-    stop_block_emergency_off = False
-    stop_door_lock = False
+    __slave = 1
 
     def __init__(self, port: str, baudrate: int, bytesize: int):
         self.master = modbus_rtu.RtuMaster(
@@ -31,89 +29,93 @@ class RequestManager:
         self.master.set_timeout(0.5)
         self.master.set_verbose(True)
 
-    def get_version(self) -> int:
-        """Версия встроенного программного обеспечения устройства (начиная с 1)"""
-        return self.master.execute(self.slave, Command.READ_INPUT_REGISTER, 1)
+        self.__door_lock_thread_status = False
+        self.__stop_block_emergency_off = False
+        self.__stop_door_lock = False
 
-    def set_period_on(self, period: int) -> None:
+    def getVersion(self) -> int:
+        """Версия встроенного программного обеспечения устройства (начиная с 1)"""
+        return self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, 1)
+
+    def setPeriodOn(self, period: int) -> None:
         """Период включения клапана хлора в мс. Значение в данном регистре должно
         изменяться только при отключенном клапане подачи хлора"""
         # TODO а как определить что клапан отключен???
-        self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 2, output_value=period)
+        self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 2, output_value=period)
 
-    def set_time_on(self, time: int) -> None:
+    def setTimeOn(self, time: int) -> None:
         """Время включения клапана хлора в каждом периоде в мс. Значение в
         данном регистре должно изменяться только при отключенном клапане подачи хлора"""
-        self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 3, output_value=time)
+        self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 3, output_value=time)
 
-    def set_limit_on(self, limit: int, amper=True) -> None:
+    def setLimitOn(self, limit: int, amper=True) -> None:
         """Уставка порога включения клапана по хлору (в сотых долях тока от
         диапазона измерений анализатора хлора, 1мА = 100 единиц)"""
         koeff = 1
         if amper:
             koeff = 100
-        self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 4, output_value=limit*koeff)
+        self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 4, output_value=limit * koeff)
 
-    def get_i(self, channel: int, amper=True) -> int:
+    def getI(self, channel: int, amper=True) -> int:
         """Измеренное значение тока канала датчика концентрации хлора channel(1-4), 1мА = 100 единиц)"""
         START_ADDRESS = 4
         if channel < 1 or channel > 4:
             logging.debug("Channel must be between 1 and 4")
             return -1
         elif amper:
-            return self.master.execute(self.slave, Command.READ_INPUT_REGISTER, START_ADDRESS + channel) / 100
+            return self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, START_ADDRESS + channel) / 100
         else:
-            return self.master.execute(self.slave, Command.READ_INPUT_REGISTER, START_ADDRESS + channel)
+            return self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, START_ADDRESS + channel)
 
-    def get_average_i(self, amper=True) -> int:
+    def getAverageI(self, amper=True) -> int:
         """Среднее значение тока по всем каналам датчиков концентрации хлора, 1мА = 100 единиц)"""
         if amper:
-            return self.master.execute(self.slave, Command.READ_INPUT_REGISTER, 9) / 100
+            return self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, 9) / 100
         else:
-            return self.master.execute(self.slave, Command.READ_INPUT_REGISTER, 9)
+            return self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, 9)
 
-    def set_open_allow(self) -> None:
+    def setOpenAllow(self) -> None:
         """Разрешение работы (открытия) клапана подачи хлора.
         Бит 0 – разрешение автоматического управления клапаном хлора по показаниям датчиков концентрации"""
         # TODO почему только один режим, как его потом выключить?
-        self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 10, output_value=0)
+        self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 10, output_value=0)
 
-    def set_block_emergency_off(self) -> None:
+    def setBlockEmergencyOff(self) -> None:
         """Регистр блокировки аварийного отключения клапана подачи хлора по таймауту.
         Регистр предназначен для отключения блокировки аварийного отключения клапана подачи хлора по таймауту.
         Для отключения блокировки, программное обеспечение верхнего уровня должно, не реже 1 раза в 15 секунд,
         последовательно записывать в данный регистр значения 0 и 1. Временной промежуток между записями значений
         должен быть не менее 0,5 сек."""
         # TODO похоже на говно
-        self.stop_block_emergency_off = False
-        thread = Thread(target=self.block_emergency_off, args=(lambda: self.stop_block_emergency_off,))
+        self.__stop_block_emergency_off = False
+        thread = Thread(target=self.block_emergency_off, args=(lambda: self.__stop_block_emergency_off,))
         thread.start()
 
-    def stop_block_emergency_off_thread(self) -> None:
-        self.stop_block_emergency_off = True
+    def stopBlockEmergencyOffThread(self) -> None:
+        self.__stop_block_emergency_off = True
 
-    def block_emergency_off(self, stop) -> None:
+    def blockEmergencyOff(self, stop) -> None:
         while True:
-            self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 11, output_value=0)
+            self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 11, output_value=0)
             time.sleep(0.5)
-            self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 11, output_value=1)
+            self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 11, output_value=1)
             time.sleep(14.5)
             if stop:
                 break
 
-    def set_open_shutter(self, shutter: int, pos: int) -> None:
+    def setOpenShutter(self, shutter: int, pos: int) -> None:
         """Управление положением воздушной заслонки 1 или 2
         Значение 0 соответствует полностью открытому состоянию Значение 1000 соответствует полностью закрытому
         состоянию. Допускается указывать значения от 0 до 10000"""
         if 1 <= shutter <= 2:
             if 0 <= pos <= 10000:
-                self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 12, output_value=pos)
+                self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 12, output_value=pos)
             else:
                 logging.debug("pos must be between 1 and 1000")
         else:
             logging.debug("shutter must be 1 or 2")
 
-    def get_shutter_current_pos(self, shutter: int) -> int:
+    def getShutterCurrentPos(self, shutter: int) -> int:
         """Текущее положение воздушной заслонки 1 или 2 (чтение показаний датчика положения заслонки)
         Значение 0 соответствует полностью открытому состоянию Значение 1000 соответствует полностью закрытому
         состоянию. Допускается указывать значения от 0 до 10000"""
@@ -121,9 +123,9 @@ class RequestManager:
         if shutter < 1 or shutter > 2:
             return -1
         else:
-            return self.master.execute(self.slave, Command.READ_INPUT_REGISTER, START_ADDRESS + shutter)
+            return self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, START_ADDRESS + shutter)
 
-    def set_fan_speed(self, fan: int, mode: int) -> None:
+    def setFanSpeed(self, fan: int, mode: int) -> None:
         """Управление вентилятором 1 или 2
         0 – малая скорость
         1 – средняя скорость
@@ -132,13 +134,13 @@ class RequestManager:
         START_ADDRESS = 15
         if 1 <= fan <= 2:
             if 0 <= mode <= 3:
-                self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, START_ADDRESS + fan, output_value=mode)
+                self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, START_ADDRESS + fan, output_value=mode)
             else:
                 logging.debug("mode must be between 1 and 3")
         else:
             logging.debug("fan must be between 1 and 3")
 
-    def set_lightning(self, tambur, room) -> None:
+    def setLightning(self, tambur, room) -> None:
         """Управление освещением
         Бит 0 (инверсный):
         0 – освещение тамбура включено
@@ -148,14 +150,14 @@ class RequestManager:
         1 – освещение камеры выключено"""
         if 0 <= tambur <= 1:
             if 0 <= room <= 1:
-                self.master.execute(self.slave, Command.PRESENT_MULTIPLE_REGISTER, 18,
+                self.master.execute(self.__slave, Command.PRESENT_MULTIPLE_REGISTER, 18,
                                     output_value=[tambur, room])
             else:
                 logging.debug("camera must be 0 or 1")
         else:
             logging.debug("tambur must be 0 or 1")
 
-    def get_sensors_states(self):
+    def getSensorsStates(self):
         """Состояние кнопок открытия и датчиков открытия дверей
         Бит 0: состояние кнопки открытия двери тамбура
         0 – кнопка отпущена
@@ -170,27 +172,30 @@ class RequestManager:
         0 – дверь открыта
         1 – дверь закрыта"""
         keys = ("tambur_button", "room_button", "tambur_door", "room_door")
-        status = self.master.execute(self.slave, Command.READ_INPUT_REGISTER, 19)
+        status = self.master.execute(self.__slave, Command.READ_INPUT_REGISTER, 19)
         return {key: value for key, value in zip(keys, status)}
 
-    def set_door_lock(self, tambur=True, room=True) -> None:
+    def setDoorLock(self, tambur=True, room=True) -> None:
         """Управление электромагнитными замками дверей
         Бит 0: управление замком тамбура
         Бит 1: управление замком камеры
         Для снятия напряжения с электромагнитного замка двери, программное обеспечение верхнего уровня должно,
         не реже 1 раза в 7 секунд, последовательно записывать в соответствующий бит значений 0 и 1.
         Временной промежуток между записями значений должен быть не менее 0,1 сек."""
-        self.stop_door_lock = False
+        self.__stop_door_lock = False
         if tambur or room:
-            thread = Thread(target=self.door_lock, args=(tambur, room, lambda: self.stop_door_lock))
+            thread = Thread(target=self.door_lock, args=(tambur, room, lambda: self.__stop_door_lock))
             thread.start()
         else:
             logging.debug("Оба аргумента False")
 
-    def stop_door_lock_thread(self) -> None:
-        self.stop_door_lock = True
+    def doorThreadStatusRun(self) -> bool:
+        return not self.__stop_door_lock
 
-    def door_lock(self, tambur, room, stop) -> None:
+    def stopDoorLockThread(self) -> None:
+        self.__stop_door_lock = True
+
+    def doorLock(self, tambur, room, stop) -> None:
         while True:
             output_1 = [0, 1]
             output_2 = [1, 1]
@@ -200,19 +205,19 @@ class RequestManager:
             elif not tambur and room:
                 output_1 = [1, 0]
                 output_2 = [1, 1]
-            self.master.execute(self.slave, Command.PRESENT_MULTIPLE_REGISTER, 20, output_value=output_1)
+            self.master.execute(self.__slave, Command.PRESENT_MULTIPLE_REGISTER, 20, output_value=output_1)
             time.sleep(0.5)
-            self.master.execute(self.slave, Command.PRESENT_MULTIPLE_REGISTER, 20, output_value=output_2)
+            self.master.execute(self.__slave, Command.PRESENT_MULTIPLE_REGISTER, 20, output_value=output_2)
             time.sleep(6.5)
             if stop:
                 break
 
-    def set_light(self, mode: int) -> None:
+    def setLight(self, mode: int) -> None:
         """Управление световым табло
         0 – световое табло выключено
         1 – световое табло постоянно включено
         2 – световое табло периодически включается и выключается"""
         if 0 <= mode <= 2:
-            self.master.execute(self.slave, Command.PRESENT_SINGLE_REGISTER, 21, output_value=mode)
+            self.master.execute(self.__slave, Command.PRESENT_SINGLE_REGISTER, 21, output_value=mode)
         else:
             logging.debug("mode must be between 0 and 2")

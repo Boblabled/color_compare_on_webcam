@@ -9,6 +9,7 @@ from Graphics.CameraWidget import Widget as CameraWidget
 from Graphics.TimerWidget import Widget as TimerWidget
 from Graphics.ToolsWidget import Widget as ToolsWidget
 from Service import convertui
+from Workers.memory_keys import Workers
 
 convertui.convertui(__file__, 'ui_main')
 
@@ -16,6 +17,7 @@ convertui.convertui(__file__, 'ui_main')
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, workers_memory, threads_memory):
         super().__init__()
+        self.__workers_memory = workers_memory
         self.mainWidget = Widget(workers_memory, threads_memory)
         self.setCentralWidget(self.mainWidget)
         self.resize(836, 800)
@@ -29,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tool_action.triggered.connect(self.showTools)
         view_menu.addAction(tool_action)
 
-        with open("Graphics/MainWidget/styles.css", "r") as file:
+        with open("Graphics/Styles/styles.css", "r") as file:
             self.setStyleSheet(file.read())
 
     def showLogger(self, checked):
@@ -41,8 +43,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def showTools(self, checked):
         if checked:
             self.mainWidget.tools_widget.show()
+            self.__workers_memory[Workers.amperage_sensors_worker].resume()
         else:
             self.mainWidget.tools_widget.hide()
+            self.__workers_memory[Workers.amperage_sensors_worker].pause()
 
 
 class Widget(QtWidgets.QWidget, ui_main.Ui_WidgetName):
@@ -61,7 +65,7 @@ class Widget(QtWidgets.QWidget, ui_main.Ui_WidgetName):
         self.verticalLayout.addWidget(self.logger_widget)
         self.logger_widget.hide()
 
-        self.tools_widget = ToolsWidget()
+        self.tools_widget = ToolsWidget(self.__workers_memory)
 
         for worker in self.__workers_memory.keys():
             worker: str
